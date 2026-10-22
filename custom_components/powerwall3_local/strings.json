@@ -35,10 +35,41 @@
     "step": {
       "init": {
         "title": "Options",
+        "menu_options": {
+          "settings": "Polling interval",
+          "add_group": "Add string group",
+          "remove_group": "Remove string group"
+        }
+      },
+      "settings": {
+        "title": "Polling interval",
         "data": {
           "scan_interval": "Polling interval"
         }
+      },
+      "add_group": {
+        "title": "Add string group",
+        "description": "Combine several PV strings (e.g. all inputs of one PV array) into one group with its own power, voltage, current and energy sensors - useful for a separate PVOutput system.",
+        "data": {
+          "name": "Group name",
+          "strings": "Strings"
+        },
+        "data_description": {
+          "name": "e.g. IBC roof front",
+          "strings": "Tip: inputs that show voltage are connected."
+        }
+      },
+      "remove_group": {
+        "title": "Remove string group",
+        "data": {
+          "group_id": "Group"
+        }
       }
+    },
+    "error": {
+      "name_required": "Please enter a name.",
+      "name_exists": "A group with this name already exists.",
+      "no_strings": "Select at least one string."
     }
   },
   "selector": {
@@ -51,21 +82,66 @@
   },
   "entity": {
     "sensor": {
-      "string_power": { "name": "String {string} power" },
-      "string_voltage": { "name": "String {string} voltage" },
-      "string_current": { "name": "String {string} current" },
-      "string_state": { "name": "String {string} state" },
-      "string_energy_today": { "name": "String {string} energy today" },
-      "string_energy_total": { "name": "String {string} energy total" },
-      "pv_power": { "name": "PV power" },
-      "pv_energy_today": { "name": "PV energy today" },
-      "pv_energy_total": { "name": "PV energy total" },
-      "site_solar_power": { "name": "Site solar power" },
-      "battery_level": { "name": "Battery level" },
-      "battery_power": { "name": "Battery power" },
-      "grid_power": { "name": "Grid power" },
-      "load_power": { "name": "Home load power" },
-      "grid_status": { "name": "Grid status" }
+      "string_power": {
+        "name": "String {string} power"
+      },
+      "string_voltage": {
+        "name": "String {string} voltage"
+      },
+      "string_current": {
+        "name": "String {string} current"
+      },
+      "string_state": {
+        "name": "String {string} state"
+      },
+      "string_energy_today": {
+        "name": "String {string} energy today"
+      },
+      "string_energy_total": {
+        "name": "String {string} energy total"
+      },
+      "pv_power": {
+        "name": "PV power"
+      },
+      "pv_energy_today": {
+        "name": "PV energy today"
+      },
+      "pv_energy_total": {
+        "name": "PV energy total"
+      },
+      "site_solar_power": {
+        "name": "Site solar power"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "load_power": {
+        "name": "Home load power"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      },
+      "group_power": {
+        "name": "{group} power"
+      },
+      "group_voltage": {
+        "name": "{group} voltage"
+      },
+      "group_current": {
+        "name": "{group} current"
+      },
+      "group_energy_today": {
+        "name": "{group} energy today"
+      },
+      "group_energy_total": {
+        "name": "{group} energy total"
+      }
     }
   }
 }

@@ -35,10 +35,41 @@
     "step": {
       "init": {
         "title": "Optionen",
+        "menu_options": {
+          "settings": "Abfrageintervall",
+          "add_group": "String-Gruppe hinzufügen",
+          "remove_group": "String-Gruppe entfernen"
+        }
+      },
+      "settings": {
+        "title": "Abfrageintervall",
         "data": {
           "scan_interval": "Abfrageintervall"
         }
+      },
+      "add_group": {
+        "title": "String-Gruppe hinzufügen",
+        "description": "Fasst mehrere PV-Strings (z. B. alle Eingänge einer PV-Anlage) zu einer Gruppe mit eigenen Sensoren für Leistung, Spannung, Strom und Energie zusammen – praktisch für eine eigene PVOutput-Anlage.",
+        "data": {
+          "name": "Name der Gruppe",
+          "strings": "Strings"
+        },
+        "data_description": {
+          "name": "z. B. IBC Dach vorne",
+          "strings": "Tipp: Eingänge mit Spannung sind belegt."
+        }
+      },
+      "remove_group": {
+        "title": "String-Gruppe entfernen",
+        "data": {
+          "group_id": "Gruppe"
+        }
       }
+    },
+    "error": {
+      "name_required": "Bitte einen Namen eingeben.",
+      "name_exists": "Es gibt bereits eine Gruppe mit diesem Namen.",
+      "no_strings": "Mindestens einen String auswählen."
     }
   },
   "selector": {
@@ -51,21 +82,66 @@
   },
   "entity": {
     "sensor": {
-      "string_power": { "name": "String {string} Leistung" },
-      "string_voltage": { "name": "String {string} Spannung" },
-      "string_current": { "name": "String {string} Strom" },
-      "string_state": { "name": "String {string} Status" },
-      "string_energy_today": { "name": "String {string} Energie heute" },
-      "string_energy_total": { "name": "String {string} Energie gesamt" },
-      "pv_power": { "name": "PV-Leistung" },
-      "pv_energy_today": { "name": "PV-Energie heute" },
-      "pv_energy_total": { "name": "PV-Energie gesamt" },
-      "site_solar_power": { "name": "Solarleistung Standort" },
-      "battery_level": { "name": "Batteriestand" },
-      "battery_power": { "name": "Batterieleistung" },
-      "grid_power": { "name": "Netzleistung" },
-      "load_power": { "name": "Hausverbrauch" },
-      "grid_status": { "name": "Netzstatus" }
+      "string_power": {
+        "name": "String {string} Leistung"
+      },
+      "string_voltage": {
+        "name": "String {string} Spannung"
+      },
+      "string_current": {
+        "name": "String {string} Strom"
+      },
+      "string_state": {
+        "name": "String {string} Status"
+      },
+      "string_energy_today": {
+        "name": "String {string} Energie heute"
+      },
+      "string_energy_total": {
+        "name": "String {string} Energie gesamt"
+      },
+      "pv_power": {
+        "name": "PV-Leistung"
+      },
+      "pv_energy_today": {
+        "name": "PV-Energie heute"
+      },
+      "pv_energy_total": {
+        "name": "PV-Energie gesamt"
+      },
+      "site_solar_power": {
+        "name": "Solarleistung Standort"
+      },
+      "battery_level": {
+        "name": "Batteriestand"
+      },
+      "battery_power": {
+        "name": "Batterieleistung"
+      },
+      "grid_power": {
+        "name": "Netzleistung"
+      },
+      "load_power": {
+        "name": "Hausverbrauch"
+      },
+      "grid_status": {
+        "name": "Netzstatus"
+      },
+      "group_power": {
+        "name": "{group} Leistung"
+      },
+      "group_voltage": {
+        "name": "{group} Spannung"
+      },
+      "group_current": {
+        "name": "{group} Strom"
+      },
+      "group_energy_today": {
+        "name": "{group} Energie heute"
+      },
+      "group_energy_total": {
+        "name": "{group} Energie gesamt"
+      }
     }
   }
 }
