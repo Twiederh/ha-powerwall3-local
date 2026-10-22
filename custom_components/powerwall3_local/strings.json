@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Powerwall 3 Local",
+        "description": "How is Home Assistant connected to the Powerwall 3?",
+        "data": {
+          "connection_type": "Connection"
+        }
+      },
+      "connection": {
+        "title": "Connection details",
+        "description": "Gateway password: the full password from the QR sticker on the Powerwall 3. For the wired LAN (v1r) you also need the RSA private key registered with `python -m pypowerwall register`.",
+        "data": {
+          "host": "Host / IP address",
+          "gw_password": "Gateway password",
+          "rsa_key_path": "Path to RSA private key"
+        },
+        "data_description": {
+          "host": "Wired LAN: IP of the Powerwall on the vendor subnet (e.g. 10.42.1.x). Wi-Fi: 192.168.91.1",
+          "rsa_key_path": "Path inside Home Assistant, e.g. /config/tedapi_rsa_private.pem"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the Powerwall. Check host, password, key and network route (see logs).",
+      "invalid_key_path": "The RSA key file does not exist or cannot be read.",
+      "unknown": "Unexpected error, see logs."
+    },
+    "abort": {
+      "already_configured": "This Powerwall is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Polling interval"
+        }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "v1r": "Wired LAN (v1r, RSA key)",
+        "wifi": "Powerwall Wi-Fi (TEDAPI)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "string_power": { "name": "String {string} power" },
+      "string_voltage": { "name": "String {string} voltage" },
+      "string_current": { "name": "String {string} current" },
+      "string_state": { "name": "String {string} state" },
+      "string_energy_today": { "name": "String {string} energy today" },
+      "string_energy_total": { "name": "String {string} energy total" },
+      "pv_power": { "name": "PV power" },
+      "pv_energy_today": { "name": "PV energy today" },
+      "pv_energy_total": { "name": "PV energy total" },
+      "site_solar_power": { "name": "Site solar power" },
+      "battery_level": { "name": "Battery level" },
+      "battery_power": { "name": "Battery power" },
+      "grid_power": { "name": "Grid power" },
+      "load_power": { "name": "Home load power" },
+      "grid_status": { "name": "Grid status" }
+    }
+  }
+}

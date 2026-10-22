@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Powerwall 3 Local",
+        "description": "Wie ist Home Assistant mit der Powerwall 3 verbunden?",
+        "data": {
+          "connection_type": "Verbindung"
+        }
+      },
+      "connection": {
+        "title": "Verbindungsdaten",
+        "description": "Gateway-Passwort: das vollständige Passwort vom QR-Aufkleber der Powerwall 3. Für das kabelgebundene LAN (v1r) brauchst du zusätzlich den privaten RSA-Schlüssel, der mit `python -m pypowerwall register` registriert wurde.",
+        "data": {
+          "host": "Host / IP-Adresse",
+          "gw_password": "Gateway-Passwort",
+          "rsa_key_path": "Pfad zum privaten RSA-Schlüssel"
+        },
+        "data_description": {
+          "host": "Kabel-LAN: IP der Powerwall im Vendor-Subnetz (z. B. 10.42.1.x). WLAN: 192.168.91.1",
+          "rsa_key_path": "Pfad innerhalb von Home Assistant, z. B. /config/tedapi_rsa_private.pem"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Keine Verbindung zur Powerwall. Host, Passwort, Schlüssel und Netzwerkroute prüfen (siehe Log).",
+      "invalid_key_path": "Die RSA-Schlüsseldatei existiert nicht oder ist nicht lesbar.",
+      "unknown": "Unerwarteter Fehler, siehe Log."
+    },
+    "abort": {
+      "already_configured": "Diese Powerwall ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "data": {
+          "scan_interval": "Abfrageintervall"
+        }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "v1r": "Kabel-LAN (v1r, RSA-Schlüssel)",
+        "wifi": "Powerwall-WLAN (TEDAPI)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "string_power": { "name": "String {string} Leistung" },
+      "string_voltage": { "name": "String {string} Spannung" },
+      "string_current": { "name": "String {string} Strom" },
+      "string_state": { "name": "String {string} Status" },
+      "string_energy_today": { "name": "String {string} Energie heute" },
+      "string_energy_total": { "name": "String {string} Energie gesamt" },
+      "pv_power": { "name": "PV-Leistung" },
+      "pv_energy_today": { "name": "PV-Energie heute" },
+      "pv_energy_total": { "name": "PV-Energie gesamt" },
+      "site_solar_power": { "name": "Solarleistung Standort" },
+      "battery_level": { "name": "Batteriestand" },
+      "battery_power": { "name": "Batterieleistung" },
+      "grid_power": { "name": "Netzleistung" },
+      "load_power": { "name": "Hausverbrauch" },
+      "grid_status": { "name": "Netzstatus" }
+    }
+  }
+}
