@@ -19,12 +19,13 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import PowerwallData, StringData
-from .const import DOMAIN, MANUFACTURER, MODEL, TOTAL_KEY
+from .const import CONF_GROUPS, DOMAIN, MANUFACTURER, MODEL, TOTAL_KEY
 from .coordinator import Powerwall3ConfigEntry, Powerwall3Coordinator
 
 
@@ -182,7 +183,87 @@ async def async_setup_entry(
     entities.append(EnergySensor(coordinator, TOTAL_KEY, today=True))
     entities.append(EnergySensor(coordinator, TOTAL_KEY, today=False))
 
+    groups: list[dict] = entry.options.get(CONF_GROUPS, [])
+    for group in groups:
+        entities.extend(GroupSensor(coordinator, group, desc) for desc in GROUP_SENSORS)
+        entities.append(GroupEnergySensor(coordinator, group, today=True))
+        entities.append(GroupEnergySensor(coordinator, group, today=False))
+
+    _remove_stale_group_entities(hass, entry, coordinator.info.din, {g["id"] for g in groups})
     async_add_entities(entities)
+
+
+def _remove_stale_group_entities(
+    hass: HomeAssistant, entry: Powerwall3ConfigEntry, din: str, group_ids: set[str]
+) -> None:
+    """Delete entities of groups that were removed in the options."""
+    registry = er.async_get(hass)
+    prefix = f"{din}_group_"
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.unique_id.startswith(prefix):
+            group_id = entity.unique_id[len(prefix):].split("_", 1)[0]
+            if group_id not in group_ids:
+                registry.async_remove(entity.entity_id)
+
+
+# --- group helpers -------------------------------------------------------------
+
+
+def _group_power(data: PowerwallData, members: list[str]) -> float | None:
+    values = [data.strings[s].power for s in members if s in data.strings]
+    values = [max(v, 0.0) for v in values if v is not None]
+    return float(sum(values)) if values else None
+
+
+def _group_current(data: PowerwallData, members: list[str]) -> float | None:
+    values = [data.strings[s].current for s in members if s in data.strings]
+    values = [v for v in values if v is not None]
+    return float(sum(values)) if values else None
+
+
+def _group_voltage(data: PowerwallData, members: list[str]) -> float | None:
+    """Average of the members that carry voltage (parallel strings share one)."""
+    values = [data.strings[s].voltage for s in members if s in data.strings]
+    values = [v for v in values if v is not None and v > 0]
+    return float(sum(values) / len(values)) if values else (0.0 if members else None)
+
+
+@dataclass(frozen=True, kw_only=True)
+class GroupSensorDescription(SensorEntityDescription):
+    """Sensor over a group of strings."""
+
+    value_fn: Callable[[PowerwallData, list[str]], float | None]
+
+
+GROUP_SENSORS: tuple[GroupSensorDescription, ...] = (
+    GroupSensorDescription(
+        key="power",
+        translation_key="group_power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
+        value_fn=_group_power,
+    ),
+    GroupSensorDescription(
+        key="voltage",
+        translation_key="group_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+        value_fn=_group_voltage,
+    ),
+    GroupSensorDescription(
+        key="current",
+        translation_key="group_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        value_fn=_group_current,
+    ),
+)
 
 
 # --- entities ----------------------------------------------------------------
@@ -282,3 +363,57 @@ class EnergySensor(Powerwall3Entity, SensorEntity):
         if acc is None:
             return None
         return round(acc.today_kwh if self._today else acc.total_kwh, 4)
+
+
+class GroupSensor(Powerwall3Entity, SensorEntity):
+    """Live value (power, voltage, current) of a string group."""
+
+    entity_description: GroupSensorDescription
+
+    def __init__(
+        self,
+        coordinator: Powerwall3Coordinator,
+        group: dict,
+        description: GroupSensorDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._members: list[str] = list(group["strings"])
+        self._attr_unique_id = f"{self._din}_group_{group['id']}_{description.key}"
+        self._attr_translation_placeholders = {"group": group["name"]}
+        self._attr_extra_state_attributes = {"strings": self._members}
+
+    @property
+    def native_value(self) -> float | None:
+        return self.entity_description.value_fn(self.coordinator.data, self._members)
+
+
+class GroupEnergySensor(Powerwall3Entity, SensorEntity):
+    """Energy of a group = sum of its strings' energy counters.
+
+    Because it sums the per-string counters, the group includes everything
+    the strings produced today, even before the group was created.
+    """
+
+    def __init__(self, coordinator: Powerwall3Coordinator, group: dict, today: bool) -> None:
+        super().__init__(coordinator)
+        self._members: list[str] = list(group["strings"])
+        self._today = today
+        self.entity_description = ENERGY_TODAY if today else ENERGY_TOTAL
+        suffix = "today" if today else "total"
+        self._attr_unique_id = f"{self._din}_group_{group['id']}_energy_{suffix}"
+        self._attr_translation_key = f"group_energy_{suffix}"
+        self._attr_translation_placeholders = {"group": group["name"]}
+        self._attr_extra_state_attributes = {"strings": self._members}
+
+    @property
+    def available(self) -> bool:
+        return any(s in self.coordinator.energy for s in self._members)
+
+    @property
+    def native_value(self) -> float | None:
+        accs = [self.coordinator.energy[s] for s in self._members if s in self.coordinator.energy]
+        if not accs:
+            return None
+        total = sum(a.today_kwh if self._today else a.total_kwh for a in accs)
+        return round(total, 4)

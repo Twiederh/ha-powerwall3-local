@@ -12,6 +12,13 @@ CONF_CONNECTION_TYPE = "connection_type"
 CONF_GW_PASSWORD = "gw_password"
 CONF_RSA_KEY_PATH = "rsa_key_path"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_GROUPS = "groups"  # options: [{"id": str, "name": str, "strings": [str, ...]}]
+CONF_GROUP_NAME = "name"
+CONF_GROUP_STRINGS = "strings"
+CONF_GROUP_ID = "group_id"
+
+# Fallback list when the options flow runs without live data
+ALL_STRINGS = ["A", "B", "C", "D", "E", "F"]
 
 CONNECTION_V1R = "v1r"
 CONNECTION_WIFI = "wifi"
