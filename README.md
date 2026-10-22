@@ -4,7 +4,7 @@ Home-Assistant-Integration, die eine **Tesla Powerwall 3 lokal** über [pypowerw
 
 Damit lässt sich der Ertrag der direkt an der Powerwall 3 angeschlossenen Module getrennt von AC-gekoppelten Wechselrichtern (SMA, SolarEdge, …) erfassen – z. B. für eine eigene PVOutput-Anlage.
 
-> ⚠️ Status: 0.1.0, mit gemockten Daten getestet, noch nicht an einer echten Powerwall 3.
+> Status: 0.1.0 – erste Version, an einer echten Powerwall 3 in Betrieb.
 
 ## Sensoren
 
@@ -40,24 +40,59 @@ Die Powerwall 3 hat **keine normale lokale API** im Heimnetz. Es gibt zwei Wege:
 
 ## RSA-Schlüssel registrieren (nur v1r)
 
-Auf einem Rechner mit Python (nicht in HA nötig):
+Die Registrierung läuft einmalig auf einem beliebigen Rechner mit Python (nicht in HA) über die Tesla-Cloud. Der Rechner muss dafür **nicht** mit der Powerwall verbunden sein.
+
+### 1. Vorbereiten
 
 ```bash
+mkdir ~/powerwall-key && cd ~/powerwall-key
+python3 -m venv venv
+source venv/bin/activate
 pip install pypowerwall
+```
+
+Ein eigener Ordner ist sinnvoll, weil das Skript den Schlüssel im aktuellen Verzeichnis ablegt.
+
+> **macOS – `CERTIFICATE_VERIFY_FAILED`:** Python vom python.org-Installer bringt keine Root-Zertifikate mit. Entweder einmalig `open "/Applications/Python 3.13/Install Certificates.command"` ausführen (Version anpassen) oder für die aktuelle Sitzung `export SSL_CERT_FILE=$(python -m certifi)` setzen. Die Zertifikatsprüfung bitte nicht abschalten.
+
+### 2. Registrieren – mit der Fleet API (Option 2)
+
+```bash
 python -m pypowerwall register
 ```
 
-- Option 1 (Tesla Owner API, mit Tesla-Konto anmelden) ist der einfachste Weg. Option 2 nutzt deine Fleet-API-App.
-- Das Skript erzeugt `tedapi_rsa_private.pem` und registriert den öffentlichen Schlüssel.
-- Zur Bestätigung musst du ggf. einen Powerwall-Schalter kurz aus- und wieder einschalten; danach 30–60 s warten, bis die Status-LED wieder weiß ist.
+Option 1 (Owner API) wird von Tesla inzwischen oft mit `Failed to get products (403) … forbidden` abgelehnt. Zuverlässig ist **Option 2 mit deiner eigenen Fleet-API-App** (dieselbe wie für die Tesla-Fleet-Integration):
 
-Dann `tedapi_rsa_private.pem` nach `/config/tedapi_rsa_private.pem` in Home Assistant kopieren.
+- Methode **`2`** wählen
+- **Client ID**, **Client Secret** und die in der App eingetragene **Redirect URI** angeben (z. B. `https://my.home-assistant.io/redirect/oauth` – Zeichen für Zeichen identisch, ohne Slash am Ende)
+- Region **`2` (Europe)** bzw. deine Region
+- Die App braucht die Scopes **Energy Product Information** und **Energy Product Commands/Settings** (`energy_device_data`, `energy_cmds`)
+- Den angezeigten Link im Browser öffnen und bei Tesla anmelden. Danach landest du auf der Redirect-Seite (eine Fehlermeldung dort ist normal). Die **komplette URL aus der Adresszeile** (enthält `?code=…`) zügig ins Terminal kopieren – der Code ist nur wenige Minuten gültig.
+- Energy Site auswählen; der Schlüssel wird registriert.
 
-Test vorab (optional):
+Die Energy-Endpunkte der Fleet API sind kostenlos.
+
+### 3. Physische Bestätigung (falls verlangt)
+
+Erscheint „Key verified automatically via cloud“, bist du fertig. Sonst fordert das Skript eine Bestätigung an der Powerwall:
+
+- **Innerhalb von ca. 10 Minuten** den **On/Off-Schalter der Powerwall 3** (links am Gerät unter der roten Rapid-Shutdown-Klappe) **ca. 15 Sekunden ausschalten**, dann wieder ein. Ein kurzes Antippen wird ignoriert; nicht so lange aus lassen, bis das Gerät komplett herunterfährt.
+- Danach im Terminal Enter drücken – am Ende sollte „Key is VERIFIED“ stehen.
+- Meldet das Skript „State 2“, war das Zeitfenster zu: Befehl einfach erneut ausführen, der vorhandene Schlüssel wird wiederverwendet.
+
+### 4. Schlüssel nach Home Assistant kopieren
+
+`tedapi_rsa_private.pem` nach `/config/tedapi_rsa_private.pem` kopieren (Samba-Freigabe, Studio Code Server o. Ä.). Dieser Pfad ist in der Integration vorausgefüllt.
+
+Die Datei ist wie ein Passwort zu behandeln: Wer sie hat, kann die Powerwall lokal steuern. Nicht in Git-Repos oder Backups ohne Verschlüsselung legen.
+
+### Test vorab (optional)
 
 ```bash
-python -m pypowerwall get -v1r -host 10.42.1.40 -gw_pwd DEINPASSWORT -rsa_key_path ./tedapi_rsa_private.pem
+python -m pypowerwall get -v1r -host 10.42.1.x -gw_pwd DEIN_QR_PASSWORT -rsa_key_path ./tedapi_rsa_private.pem
 ```
+
+Zeigt das Batteriestand und Solarleistung, funktioniert auch die Integration.
 
 ## Installation
 
