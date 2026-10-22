@@ -160,3 +160,68 @@ async def test_energy_survives_reload(hass: HomeAssistant, freezer) -> None:
         after = float(hass.states.get("sensor.zuhause_pv_energy_total").state)
         assert after == pytest.approx(before, rel=1e-3)
         assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_string_groups(hass: HomeAssistant, freezer) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DIN,
+        data={CONF_CONNECTION_TYPE: CONNECTION_WIFI, CONF_HOST: "192.168.91.1",
+              CONF_GW_PASSWORD: "ABCDEFGHIJ", CONF_RSA_KEY_PATH: ""},
+    )
+    entry.add_to_hass(hass)
+    freezer.move_to("2026-10-22T10:00:00+00:00")
+    pw = make_pw()
+    with patch("custom_components.powerwall3_local.api.pypowerwall.Powerwall", return_value=pw):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        # Some energy before the group exists
+        for _ in range(6):
+            freezer.tick(timedelta(seconds=10))
+            await entry.runtime_data.async_refresh()
+
+        # Options menu -> add group "IBC" with strings C + D
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.MENU
+        assert "remove_group" not in result["menu_options"]
+        result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "add_group"})
+        assert result["step_id"] == "add_group"
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"name": "IBC", "strings": ["D", "C"]}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()  # reload
+        assert entry.options["groups"][0]["strings"] == ["C", "D"]
+
+        assert float(hass.states.get("sensor.zuhause_ibc_power").state) == 1350.0
+        assert float(hass.states.get("sensor.zuhause_ibc_current").state) == 5.0
+        assert float(hass.states.get("sensor.zuhause_ibc_voltage").state) == 270.0  # D has 0 V
+        c_today = entry.runtime_data.energy["C"].today_kwh
+        assert c_today > 0
+        ibc_today = float(hass.states.get("sensor.zuhause_ibc_energy_today").state)
+        assert ibc_today == pytest.approx(c_today, abs=1e-4)  # includes energy from before the group
+
+        # Duplicate name is rejected
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "add_group"})
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"name": "ibc", "strings": ["A"]}
+        )
+        assert result["errors"] == {"name": "name_exists"}
+
+        # Remove the group -> its entities disappear
+        group_id = entry.options["groups"][0]["id"]
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert "remove_group" in result["menu_options"]
+        result = await hass.config_entries.options.async_configure(result["flow_id"], {"next_step_id": "remove_group"})
+        result = await hass.config_entries.options.async_configure(result["flow_id"], {"group_id": group_id})
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+        assert entry.options["groups"] == []
+        registry = er.async_get(hass)
+        assert registry.async_get("sensor.zuhause_ibc_power") is None
+        assert hass.states.get("sensor.zuhause_pv_power") is not None
+
+        assert await hass.config_entries.async_unload(entry.entry_id)

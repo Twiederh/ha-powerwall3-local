@@ -4,13 +4,14 @@ Home-Assistant-Integration, die eine **Tesla Powerwall 3 lokal** über [pypowerw
 
 Damit lässt sich der Ertrag der direkt an der Powerwall 3 angeschlossenen Module getrennt von AC-gekoppelten Wechselrichtern (SMA, SolarEdge, …) erfassen – z. B. für eine eigene PVOutput-Anlage.
 
-> Status: 0.1.0 – erste Version, an einer echten Powerwall 3 in Betrieb.
+> Status: 0.2.0 – an einer echten Powerwall 3 in Betrieb.
 
 ## Sensoren
 
 | Sensor | Einheit | Hinweis |
 |---|---|---|
 | String X Leistung / Spannung / Strom | W / V / A | pro PV-Eingang (A–F) |
+| *Gruppe* Leistung / Spannung / Strom / Energie | W / V / A / kWh | frei definierbare String-Gruppen, siehe unten |
 | String X Status | – | standardmäßig deaktiviert (`Pv_Active`, `Pv_Active_Parallel`, `Pv_Standby`) |
 | String X Energie heute / gesamt | kWh | integriert aus der Stringleistung |
 | **PV-Leistung** | W | Summe aller Strings = Ausgang des integrierten Wechselrichters |
@@ -107,9 +108,22 @@ Dann: *Einstellungen → Geräte & Dienste → Integration hinzufügen → Power
 
 Das Abfrageintervall (Standard 10 s) lässt sich unter *Konfigurieren* ändern.
 
+## String-Gruppen
+
+Unter *Powerwall 3 Local → Konfigurieren → String-Gruppe hinzufügen* lassen sich mehrere Strings (z. B. alle Eingänge einer PV-Anlage) zu einer Gruppe zusammenfassen. Jede Gruppe bekommt eigene Sensoren:
+
+| Sensor | Berechnung |
+|---|---|
+| *Gruppe* Leistung | Summe der Stringleistungen |
+| *Gruppe* Strom | Summe der Stringströme |
+| *Gruppe* Spannung | Mittelwert der Strings mit Spannung > 0 |
+| *Gruppe* Energie heute / gesamt | Summe der Energiezähler der Strings – zählt also auch, was vor dem Anlegen der Gruppe erzeugt wurde |
+
+Belegte Eingänge erkennst du daran, dass sie eine Spannung zeigen. Gruppen lassen sich über *String-Gruppe entfernen* wieder löschen; ihre Sensoren verschwinden dann ebenfalls.
+
 ## Nutzung mit PVOutput
 
-Für eine eigene PVOutput-Anlage der Module an der Powerwall 3 den Sensor **„PV-Energie heute“** (und optional „PV-Leistung“) verwenden.
+Für eine eigene PVOutput-Anlage den Sensor **„*Gruppe* Energie heute“** (und optional Leistung/Spannung) verwenden. Hängen nur die Module einer Anlage an der Powerwall 3, liefert **„PV-Energie heute“** denselben Wert.
 
 ### Hinweis zu parallel verschalteten Strings
 
