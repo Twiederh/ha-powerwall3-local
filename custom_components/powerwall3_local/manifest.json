@@ -1,13 +1,19 @@
 {
   "domain": "powerwall3_local",
-  "name": "Powerwall 3 Local",
-  "codeowners": ["@Twiederh"],
+  "name": "Tesla Powerwall 3 Local",
+  "codeowners": [
+    "@Twiederh"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/Twiederh/ha-powerwall3-local",
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Twiederh/ha-powerwall3-local/issues",
-  "loggers": ["pypowerwall"],
-  "requirements": ["pypowerwall>=0.21.0,<0.22"],
-  "version": "0.2.0"
+  "loggers": [
+    "pypowerwall"
+  ],
+  "requirements": [
+    "pypowerwall>=0.21.0,<0.22"
+  ],
+  "version": "0.2.1"
 }

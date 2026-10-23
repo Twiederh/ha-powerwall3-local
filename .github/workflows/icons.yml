@@ -1,0 +1,35 @@
+name: Build brand icons
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Render icons
+        run: |
+          pip install pillow==12.3.0
+          mkdir -p custom_components/powerwall3_local/brand
+          python tools/make_icon.py custom_components/powerwall3_local/brand
+
+      - name: Commit icons
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/powerwall3_local/brand
+          if git diff --cached --quiet; then
+            echo "Icons unchanged"
+          else
+            git commit -m "Build brand icons"
+            git push
+          fi
