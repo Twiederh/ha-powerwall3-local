@@ -1,10 +1,10 @@
-# Powerwall 3 Local
+# Tesla Powerwall 3 Local
 
 Home-Assistant-Integration, die eine **Tesla Powerwall 3 lokal** über [pypowerwall](https://github.com/jasonacox/pypowerwall) ausliest – ohne Cloud. Schwerpunkt sind die **PV-Strings des integrierten Wechselrichters**: Leistung, Spannung, Strom und daraus berechnete **Energie pro String und gesamt** (heute / Lebensdauer).
 
 Damit lässt sich der Ertrag der direkt an der Powerwall 3 angeschlossenen Module getrennt von AC-gekoppelten Wechselrichtern (SMA, SolarEdge, …) erfassen – z. B. für eine eigene PVOutput-Anlage.
 
-> Status: 0.2.0 – an einer echten Powerwall 3 in Betrieb.
+> Status: 0.2.1 – an einer echten Powerwall 3 in Betrieb.
 
 ## Sensoren
 
@@ -101,7 +101,7 @@ Zeigt das Batteriestand und Solarleistung, funktioniert auch die Integration.
 
 **Manuell:** Ordner `custom_components/powerwall3_local` nach `/config/custom_components/` kopieren, HA neu starten.
 
-Dann: *Einstellungen → Geräte & Dienste → Integration hinzufügen → Powerwall 3 Local*
+Dann: *Einstellungen → Geräte & Dienste → Integration hinzufügen → Tesla Powerwall 3 Local*
 
 1. Verbindungsart wählen (Kabel-LAN v1r oder WLAN)
 2. Host, **vollständiges Gateway-Passwort** (QR-Aufkleber auf der Powerwall 3) und bei v1r den Schlüsselpfad eintragen
@@ -110,7 +110,7 @@ Das Abfrageintervall (Standard 10 s) lässt sich unter *Konfigurieren* ändern.
 
 ## String-Gruppen
 
-Unter *Powerwall 3 Local → Konfigurieren → String-Gruppe hinzufügen* lassen sich mehrere Strings (z. B. alle Eingänge einer PV-Anlage) zu einer Gruppe zusammenfassen. Jede Gruppe bekommt eigene Sensoren:
+Unter *Tesla Powerwall 3 Local → Konfigurieren → String-Gruppe hinzufügen* lassen sich mehrere Strings (z. B. alle Eingänge einer PV-Anlage) zu einer Gruppe zusammenfassen. Jede Gruppe bekommt eigene Sensoren:
 
 | Sensor | Berechnung |
 |---|---|
@@ -128,6 +128,12 @@ Für eine eigene PVOutput-Anlage den Sensor **„*Gruppe* Energie heute“** (un
 ### Hinweis zu parallel verschalteten Strings
 
 Werden zwei Strings parallel auf einen MPPT gelegt, meldet die Powerwall den zweiten Eingang als `Pv_Active_Parallel`. Prüfe in den ersten Tagen, ob die Summe („PV-Leistung“) zu den Werten in der Tesla-App passt. Falls ein paralleler Eingang dieselben Messwerte doppelt meldet, bitte ein Issue aufmachen – dann wird die Summenbildung angepasst.
+
+## Icon
+
+Das Integrations-Icon liegt unter `custom_components/powerwall3_local/brand/` (`icon.png`, `icon@2x.png`, `dark_icon.png`, `dark_icon@2x.png`; 256×256 bzw. 512×512 px, transparentes PNG). Home Assistant zeigt lokale Brand-Bilder ab Version 2026.3 an.
+
+Die PNGs werden von `tools/make_icon.py` erzeugt; der Workflow *Build brand icons* rendert sie neu und checkt sie ein.
 
 ## Danke
 

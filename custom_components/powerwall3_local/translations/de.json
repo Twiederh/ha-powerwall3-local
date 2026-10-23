@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Powerwall 3 Local",
+        "title": "Tesla Powerwall 3 Local",
         "description": "Wie ist Home Assistant mit der Powerwall 3 verbunden?",
         "data": {
           "connection_type": "Verbindung"

@@ -117,7 +117,7 @@ class Powerwall3LocalConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info.din)
                 self._abort_if_unique_id_configured(updates=data)
-                title = info.site_name or f"Powerwall 3 ({info.din})"
+                title = info.site_name or f"Tesla Powerwall 3 ({info.din})"
                 return self.async_create_entry(title=title, data=data)
 
         defaults = user_input or {}
